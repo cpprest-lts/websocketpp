@@ -64,6 +64,11 @@ public:
 
     /// Type of a pointer to the Asio io_context being used
     typedef lib::asio::io_context* io_context_ptr;
+    /// Type of a pointer to the Asio io_context being used (deprecated)
+    /**
+     * @deprecated Use io_context_ptr instead
+     */
+    typedef io_context_ptr io_service_ptr;
     /// Type of a pointer to the Asio io_context strand being used
     typedef lib::shared_ptr<lib::asio::io_context::strand> strand_ptr;
     /// Type of the ASIO socket being used

@@ -79,6 +79,11 @@ public:
 
     /// Type of a pointer to the ASIO io_context being used
     typedef lib::asio::io_context * io_context_ptr;
+    /// Type of a pointer to the ASIO io_context being used (deprecated)
+    /**
+     * @deprecated Use io_context_ptr instead
+     */
+    typedef io_context_ptr io_service_ptr;
     /// Type of a shared pointer to the acceptor being used
     typedef lib::shared_ptr<lib::asio::ip::tcp::acceptor> acceptor_ptr;
     /// Type of a shared pointer to the resolver being used
@@ -87,6 +92,11 @@ public:
     typedef lib::shared_ptr<lib::asio::steady_timer> timer_ptr;
     /// Type of a shared pointer to an io_context work object
     typedef lib::shared_ptr<lib::asio::executor_work_guard<lib::asio::io_context::executor_type>> work_guard_ptr;
+    /// Type of a shared pointer to an io_context work object (deprecated)
+    /**
+     * @deprecated Use work_guard_ptr instead
+     */
+    typedef work_guard_ptr work_ptr;
 
     /// Type of socket pre-bind handler
     typedef lib::function<lib::error_code(acceptor_ptr)> tcp_pre_bind_handler;
@@ -381,6 +391,16 @@ public:
      */
     lib::asio::io_context & get_io_context() {
         return *m_io_context;
+    }
+
+    /// Retrieve a reference to the endpoint's io_context (deprecated)
+    /**
+     * @deprecated Use get_io_context instead
+     *
+     * @return A reference to the endpoint's io_context
+     */
+    lib::asio::io_context & get_io_service() {
+        return get_io_context();
     }
     
     /// Get local TCP endpoint

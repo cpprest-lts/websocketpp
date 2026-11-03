@@ -57,6 +57,25 @@ BOOST_AUTO_TEST_CASE( initialize_server_asio_external ) {
     s.init_asio(&ctx);
 }
 
+BOOST_AUTO_TEST_CASE( initialize_server_asio_external_deprecated_names ) {
+    typedef websocketpp::server<websocketpp::config::asio> server;
+    server s;
+    websocketpp::lib::asio::io_context ctx;
+    server::io_service_ptr ptr = &ctx;
+    s.init_asio(ptr);
+    BOOST_CHECK_EQUAL(&s.get_io_service(), &ctx);
+
+    server::connection_type::io_service_ptr con_ptr = ptr;
+    websocketpp::transport::asio::basic_socket::connection::io_service_ptr basic_ptr = ptr;
+    websocketpp::transport::asio::tls_socket::connection::io_service_ptr tls_ptr = ptr;
+    BOOST_CHECK_EQUAL(con_ptr, &ctx);
+    BOOST_CHECK_EQUAL(basic_ptr, &ctx);
+    BOOST_CHECK_EQUAL(tls_ptr, &ctx);
+
+    server::work_ptr work;
+    BOOST_CHECK(!work);
+}
+
 #ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
 BOOST_AUTO_TEST_CASE( move_construct_server_core ) {
     websocketpp::server<websocketpp::config::core> s1;

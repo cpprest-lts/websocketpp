@@ -73,6 +73,11 @@ public:
     typedef lib::shared_ptr<socket_type> socket_ptr;
     /// Type of a pointer to the ASIO io_context being used
     typedef lib::asio::io_context * io_context_ptr;
+    /// Type of a pointer to the ASIO io_context being used (deprecated)
+    /**
+     * @deprecated Use io_context_ptr instead
+     */
+    typedef io_context_ptr io_service_ptr;
     /// Type of a pointer to the ASIO io_context strand being used
     typedef lib::shared_ptr<lib::asio::io_context::strand> strand_ptr;
     /// Type of a shared pointer to the ASIO TLS context being used
