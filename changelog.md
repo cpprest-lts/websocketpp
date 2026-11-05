@@ -52,11 +52,33 @@ HEAD
 - Compatibility: Remove use of simple template ids in constructors. This was
   required to compile in C++20 mode and higher. Thank you yushb0602 for
   reporting and jcelerier for a patch.
+- Compatibility: Only insert Server Name Indication (SNI) for hostnames, not
+  for IP addresses. Thank you Radek Slabý for the patch. #924
+- Compatibility: Add static casts to silence warnings in release builds with
+  MSVC 2019. Thank you Fedor Strelkov for the patch. #955
+- Compatibility: Build with Boost 1.87 and later, which removed the
+  deprecated Asio API, and with Boost 1.89 and later, which have no
+  `boost_system` component. The CMake build now requires CMake 3.10 and
+  Boost 1.66. The renamed Asio transport names `io_service_ptr`, `work_ptr`
+  and `get_io_service()` remain as deprecated aliases of `io_context_ptr`,
+  `work_guard_ptr` and `get_io_context()`. The new CMake option
+  `USE_ASIO_STANDALONE` builds the tests and examples with standalone Asio.
+  Thank you Amini Allight, Nicolas PARLANT and Gianfranco Costamagna for the
+  patches. #1190 cpprest-lts/websocketpp#2
 - Fix Regression: Correct a regression introduced in 0.8.0 that broke
   functionality for setting accepted socket options like TCP_NODELAY.
   #530 #812
+- Fix Regression: `connection::set_status(code, msg)` no longer recurses
+  until the stack overflows. Thank you Marcin-Walkowiak for the patch.
+  cpprest-lts/websocketpp#3
 - Bug: Fix null pointer deference in proxy error handling code. Thank you
   abitmore for reporting and stkaufer for a patch. #820 #825
+- Bug: The unqualified `error::disabled` in
+  `permessage_deflate/disabled.hpp` no longer fails to compile with MSVC
+  when `permessage_deflate/enabled.hpp` is also included. #1188
+- Bug: permessage-deflate gives zlib its input in pieces, so that messages
+  of 4 GiB or more are no longer truncated on 64-bit platforms.
+  cpprest-lts/websocketpp#12
 - Security: Resolve an issue where the permessage deflate extension could
   expand beyond the configured per-message limit. The permessage-deflate config
   now has a configurable limit. (both compile time via custom config and 
@@ -66,6 +88,9 @@ HEAD
   license is in fact the 3-Clause BSD license. #906
 - Travis/CI: Updated Travis config to use newer version of ubuntu, and use
   CMake based build & tests.
+- CI: GitHub Actions builds and runs the tests on Ubuntu 24.04 and 26.04
+  (x64 and arm64), on macOS 15 and 26, and on Windows.
+  cpprest-lts/websocketpp#8
 - SCons: Fix typo in SConstruct that prevented clang from getting the right
   value for CXXFLAGS. Thank you robinlinden for reporting and a patch. #878
 - SCons: Improve compatibility with Python 3. Thank you Jochen Jägers and 
