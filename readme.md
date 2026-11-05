@@ -25,32 +25,32 @@ Major Features
 Get Involved
 ============
 
-[![Build Status](https://travis-ci.org/zaphoyd/websocketpp.png)](https://travis-ci.org/zaphoyd/websocketpp)
+**GitHub Repository**
+https://github.com/cpprest-lts/websocketpp/
+
+GitHub issues and pull requests for this fork should be submitted here, with pull requests against the default branch. Please report security vulnerabilities privately, as described in [SECURITY.md](SECURITY.md).
+
+The original project's resources:
 
 **Project Website**
-http://www.zaphoyd.com/websocketpp/
+https://www.zaphoyd.com/projects/websocketpp/
 
 **User Manual**
-http://docs.websocketpp.org/
+https://docs.websocketpp.org/
 
 **GitHub Repository**
 https://github.com/zaphoyd/websocketpp/
 
-GitHub pull requests should be submitted to the `develop` branch.
-
 **Announcements Mailing List**
-http://groups.google.com/group/websocketpp-announcements/
-
-**IRC Channel**
- #websocketpp (freenode)
+https://groups.google.com/g/websocketpp-announcements
 
 **Discussion / Development / Support Mailing List / Forum**
-http://groups.google.com/group/websocketpp/
+https://groups.google.com/g/websocketpp
 
 License
 ======
 3-Clause BSD (See COPYING for more details)
 
-Author
-======
+Original Author
+===============
 Peter Thorson - websocketpp@zaphoyd.com
