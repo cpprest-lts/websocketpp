@@ -65,6 +65,19 @@ HEAD
   `USE_ASIO_STANDALONE` builds the tests and examples with standalone Asio.
   Thank you Amini Allight, Nicolas PARLANT and Gianfranco Costamagna for the
   patches. #1190 cpprest-lts/websocketpp#2
+- Compatibility: Remove the simple template ids from the constructors in
+  `logger/syslog.hpp` as well, so that it compiles in C++20 mode. Thank you
+  Seth Bashford for the patch. #1066
+- Compatibility: Don't use `std::aligned_storage`, which C++23 deprecates,
+  in the Asio transport. Thank you Felix Hommel for the patch this is based
+  on. #1107 #1184
+- Compatibility: The deleted endpoint copy constructor takes a `const`
+  reference, so that an endpoint can be put in a `std::variant` with
+  libc++. Thank you Ricardo Domingues for the patch. #1020
+- Compatibility: Don't subtract a null pointer to check alignment in
+  `md5.hpp`, which is undefined behaviour and a Clang warning. #1004
+- Compatibility: Build the `print_client_tls` example with OpenSSL 4.0.
+  Thank you Gianfranco Costamagna for the patch. #1195
 - Fix Regression: Correct a regression introduced in 0.8.0 that broke
   functionality for setting accepted socket options like TCP_NODELAY.
   #530 #812
@@ -108,6 +121,9 @@ HEAD
   a patch. #854
 - CMake: Improve support for building tests & examples on the Haiku platform
   Thank you Schrijvers Luc for reporting and the patch. #849
+- CMake: A second `find_package(websocketpp)` no longer fails because the
+  `websocketpp::websocketpp` target already exists. Thank you Joo200 for
+  the patch. #966 #1097
 
 0.8.2 - 2020-04-19
 - Examples: Update print_client_tls example to remove use of deprecated
