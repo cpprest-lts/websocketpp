@@ -1,3 +1,5 @@
+HEAD
+
 0.8.4 - 2026-11-05
 - MINOR BREAKING BUNDLED LIBRARY CHANGE: The bundled mini-HTTP library has
   been refactored to eliminate its use of exceptions. This does not affect any
