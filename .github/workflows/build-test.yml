@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, ubuntu-24.04-arm]
+        os: [ubuntu-24.04, ubuntu-24.04-arm, ubuntu-26.04, ubuntu-26.04-arm]
         build_type: [Debug, Release]
     runs-on: ${{ matrix.os }}
     steps:
@@ -24,8 +24,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build zlib1g-dev \
-            libboost-random-dev libboost-system-dev libboost-test-dev libboost-thread-dev
+          sudo apt-get install -y ninja-build libssl-dev zlib1g-dev \
+            libboost-random-dev libboost-test-dev libboost-thread-dev
 
       - name: Configure
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DBUILD_TESTS=ON
@@ -34,4 +34,95 @@ jobs:
         run: cmake --build build
 
       - name: Test
-        run: ctest --test-dir build --output-on-failure
+        run: ctest --test-dir build --output-on-failure --timeout 300
+
+  macos:
+    name: ${{ matrix.os }} ${{ matrix.build_type }}
+    strategy:
+      fail-fast: false
+      # Two jobs rather than the full matrix, because GitHub warns that "Due to capacity constraints,
+      # jobs targeting macOS arm64 runners may experience longer queue times."
+      matrix:
+        include:
+          - os: macos-15
+            build_type: Release
+          - os: macos-26
+            build_type: Debug
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install dependencies
+        run: brew install ninja boost openssl@3
+
+      - name: Configure
+        run: >-
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DBUILD_TESTS=ON
+          -DOPENSSL_ROOT_DIR="$(brew --prefix openssl@3)"
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure --timeout 300
+
+  windows:
+    name: ${{ matrix.os }} ${{ matrix.build_type }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2025-vs2026, windows-2022]
+        build_type: [Debug, Release]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7
+
+      # vcpkg puts the compiler and other tools from the runner image into each package's hash, so each
+      # image version has its own cache. The key changes when the image or this workflow changes; vcpkg
+      # reuses the packages restored from an older entry whose hashes are unchanged, and builds the rest.
+      - name: Set up vcpkg binary cache
+        id: vcpkg
+        run: |
+          $cache = "$env:RUNNER_TEMP\vcpkg-cache"
+          New-Item -ItemType Directory -Force $cache | Out-Null
+          "VCPKG_BINARY_CACHE=$cache" >> $env:GITHUB_ENV
+          "VCPKG_BINARY_SOURCES=clear;files,$cache,readwrite" >> $env:GITHUB_ENV
+          "image=$env:ImageVersion" >> $env:GITHUB_OUTPUT
+
+      - name: Restore vcpkg binary cache
+        id: restore
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.VCPKG_BINARY_CACHE }}
+          key: vcpkg-${{ matrix.os }}-${{ steps.vcpkg.outputs.image }}-${{ hashFiles('.github/workflows/build-test.yml') }}
+          restore-keys: vcpkg-${{ matrix.os }}-
+
+      # The CMake configuration links Boost statically with MSVC, so use a static triplet
+      - name: Install dependencies
+        run: >-
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install --triplet x64-windows-static-md
+          boost-asio boost-test boost-thread openssl zlib
+
+      # Jobs with the same runner label can get different image versions, so every job that misses the
+      # exact key saves; when two jobs save the same key, the second only warns that it cannot reserve it
+      - name: Save vcpkg binary cache
+        if: steps.restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ env.VCPKG_BINARY_CACHE }}
+          key: ${{ steps.restore.outputs.cache-primary-key }}
+
+      - name: Configure
+        run: >-
+          cmake -B build -A x64 -DBUILD_TESTS=ON
+          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
+          -DVCPKG_TARGET_TRIPLET=x64-windows-static-md
+
+      - name: Build
+        run: cmake --build build --config ${{ matrix.build_type }}
+
+      - name: Test
+        run: ctest --test-dir build -C ${{ matrix.build_type }} --output-on-failure --timeout 300

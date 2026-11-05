@@ -28,8 +28,10 @@
 #define BOOST_TEST_MODULE transport_asio_timers
 #include <boost/test/unit_test.hpp>
 
+#include <chrono>
 #include <exception>
 #include <iostream>
+#include <thread>
 
 #include <websocketpp/common/thread.hpp>
 
@@ -54,9 +56,9 @@ void run_dummy_server(int port) {
     using boost::asio::ip::tcp;
 
     try {
-        boost::asio::io_service io_service;
-        tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v6(), port));
-        tcp::socket socket(io_service);
+        boost::asio::io_context io_context;
+        tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v6(), port));
+        tcp::socket socket(io_context);
 
         acceptor.accept(socket);
         for (;;) {
@@ -79,8 +81,9 @@ void run_dummy_server(int port) {
 
 // Wait for the specified time period then fail the test
 void run_test_timer(long value) {
-    boost::asio::io_service ios;
-    boost::asio::deadline_timer t(ios,boost::posix_time::milliseconds(value));
+    boost::asio::io_context ctx;
+    boost::asio::system_timer t(ctx);
+    t.expires_after(std::chrono::milliseconds(value));
     boost::system::error_code ec;
     t.wait(ec);
     BOOST_FAIL( "Test timed out" );
@@ -106,9 +109,9 @@ struct config {
 };
 
 // Mock context that does no validation
-typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
+typedef websocketpp::lib::shared_ptr<websocketpp::lib::asio::ssl::context> context_ptr;
 context_ptr on_tls_init(websocketpp::connection_hdl) {
-    return context_ptr(new boost::asio::ssl::context(boost::asio::ssl::context::sslv23));
+    return context_ptr(new websocketpp::lib::asio::ssl::context(websocketpp::lib::asio::ssl::context::sslv23));
 }
 
 // Mock connection
@@ -185,7 +188,7 @@ BOOST_AUTO_TEST_CASE( tls_handshake_timeout ) {
     dummy_server.detach();
     timer.detach();
 
-    sleep(1); // give the server thread some time to start
+    std::this_thread::sleep_for(std::chrono::seconds(1)); // give the server thread some time to start
 
     mock_endpoint endpoint;
     endpoint.set_tls_init_handler(&on_tls_init);

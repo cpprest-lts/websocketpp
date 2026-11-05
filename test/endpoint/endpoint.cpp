@@ -52,9 +52,29 @@ BOOST_AUTO_TEST_CASE( initialize_server_asio ) {
 }
 
 BOOST_AUTO_TEST_CASE( initialize_server_asio_external ) {
+    // The io_context must outlive the server, whose destructor destroys its acceptor
+    websocketpp::lib::asio::io_context ctx;
     websocketpp::server<websocketpp::config::asio> s;
-    boost::asio::io_service ios;
-    s.init_asio(&ios);
+    s.init_asio(&ctx);
+}
+
+BOOST_AUTO_TEST_CASE( initialize_server_asio_external_deprecated_names ) {
+    typedef websocketpp::server<websocketpp::config::asio> server;
+    websocketpp::lib::asio::io_context ctx;
+    server s;
+    server::io_service_ptr ptr = &ctx;
+    s.init_asio(ptr);
+    BOOST_CHECK_EQUAL(&s.get_io_service(), &ctx);
+
+    server::connection_type::io_service_ptr con_ptr = ptr;
+    websocketpp::transport::asio::basic_socket::connection::io_service_ptr basic_ptr = ptr;
+    websocketpp::transport::asio::tls_socket::connection::io_service_ptr tls_ptr = ptr;
+    BOOST_CHECK_EQUAL(con_ptr, &ctx);
+    BOOST_CHECK_EQUAL(basic_ptr, &ctx);
+    BOOST_CHECK_EQUAL(tls_ptr, &ctx);
+
+    server::work_ptr work;
+    BOOST_CHECK(!work);
 }
 
 #ifdef _WEBSOCKETPP_MOVE_SEMANTICS_
@@ -141,8 +161,8 @@ BOOST_AUTO_TEST_CASE( listen_after_listen_failure ) {
     server1.init_asio();
     server2.init_asio();
 
-    boost::asio::ip::tcp::endpoint ep1(boost::asio::ip::address::from_string("127.0.0.1"), 12345);
-    boost::asio::ip::tcp::endpoint ep2(boost::asio::ip::address::from_string("127.0.0.1"), 23456);
+    websocketpp::lib::asio::ip::tcp::endpoint ep1(websocketpp::lib::asio::ip::make_address("127.0.0.1"), 12345);
+    websocketpp::lib::asio::ip::tcp::endpoint ep2(websocketpp::lib::asio::ip::make_address("127.0.0.1"), 23456);
 
     server1.listen(ep1, ec);
     BOOST_CHECK(!ec);
