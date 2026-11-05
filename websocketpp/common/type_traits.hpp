@@ -41,6 +41,7 @@
 
 
 #ifdef _WEBSOCKETPP_CPP11_TYPE_TRAITS_
+    #include <cstddef>
     #include <type_traits>
 #else
     #include <boost/aligned_storage.hpp>
@@ -52,7 +53,13 @@ namespace websocketpp {
 namespace lib {
 
 #ifdef _WEBSOCKETPP_CPP11_TYPE_TRAITS_
-    using std::aligned_storage;
+    // C++23 deprecates std::aligned_storage
+    template <std::size_t Len>
+    struct aligned_storage {
+        struct type {
+            alignas(std::max_align_t) unsigned char data[Len];
+        };
+    };
     using std::is_same;
 #else
     using boost::aligned_storage;
