@@ -90,7 +90,7 @@ macro (link_boost)
 endmacro ()
 
 macro (link_openssl)
-    target_link_libraries (${TARGET_NAME} ${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY})
+    target_link_libraries (${TARGET_NAME} OpenSSL::SSL OpenSSL::Crypto)
     set_property(TARGET ${TARGET_NAME} APPEND PROPERTY INCLUDE_DIRECTORIES ${OPENSSL_INCLUDE_DIR})
 endmacro ()
 
