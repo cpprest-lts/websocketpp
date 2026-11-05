@@ -80,11 +80,40 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # vcpkg puts the compiler and other tools from the runner image into each package's hash, so each
+      # image version has its own cache. The key changes when the image or this workflow changes; vcpkg
+      # reuses the packages restored from an older entry whose hashes are unchanged, and builds the rest.
+      - name: Set up vcpkg binary cache
+        id: vcpkg
+        run: |
+          $cache = "$env:RUNNER_TEMP\vcpkg-cache"
+          New-Item -ItemType Directory -Force $cache | Out-Null
+          "VCPKG_BINARY_CACHE=$cache" >> $env:GITHUB_ENV
+          "VCPKG_BINARY_SOURCES=clear;files,$cache,readwrite" >> $env:GITHUB_ENV
+          "image=$env:ImageVersion" >> $env:GITHUB_OUTPUT
+
+      - name: Restore vcpkg binary cache
+        id: restore
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.VCPKG_BINARY_CACHE }}
+          key: vcpkg-${{ matrix.os }}-${{ steps.vcpkg.outputs.image }}-${{ hashFiles('.github/workflows/build-test.yml') }}
+          restore-keys: vcpkg-${{ matrix.os }}-
+
       # The CMake configuration links Boost statically with MSVC, so use a static triplet
       - name: Install dependencies
         run: >-
           & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install --triplet x64-windows-static-md
           boost-asio boost-test boost-thread openssl zlib
+
+      # Jobs with the same runner label can get different image versions, so every job that misses the
+      # exact key saves; when two jobs save the same key, the second only warns that it cannot reserve it
+      - name: Save vcpkg binary cache
+        if: steps.restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ env.VCPKG_BINARY_CACHE }}
+          key: ${{ steps.restore.outputs.cache-primary-key }}
 
       - name: Configure
         run: >-
