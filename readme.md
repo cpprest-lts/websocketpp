@@ -1,6 +1,8 @@
 WebSocket++ (0.8.x-dev)
 ==========================
 
+This is a fork of [zaphoyd/websocketpp](https://github.com/zaphoyd/websocketpp), whose last release is 0.8.2 (April 2020), maintained by the [cpprest-lts](https://github.com/cpprest-lts) organization for use by [cpprest-lts/cpprestsdk](https://github.com/cpprest-lts/cpprestsdk). It takes security fixes, fixes for major bugs, and changes needed to build with current compilers and dependencies. It does not plan new features or API changes. [Issue #5](https://github.com/cpprest-lts/websocketpp/issues/5) describes the scope and the plans.
+
 WebSocket++ is a header only C++ library that implements RFC6455 The WebSocket
 Protocol. It allows integrating WebSocket client and server functionality into
 C++ programs. It uses interchangeable network transport modules including one
