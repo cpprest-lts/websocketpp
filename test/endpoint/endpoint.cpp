@@ -52,15 +52,16 @@ BOOST_AUTO_TEST_CASE( initialize_server_asio ) {
 }
 
 BOOST_AUTO_TEST_CASE( initialize_server_asio_external ) {
-    websocketpp::server<websocketpp::config::asio> s;
+    // The io_context must outlive the server, whose destructor destroys its acceptor
     websocketpp::lib::asio::io_context ctx;
+    websocketpp::server<websocketpp::config::asio> s;
     s.init_asio(&ctx);
 }
 
 BOOST_AUTO_TEST_CASE( initialize_server_asio_external_deprecated_names ) {
     typedef websocketpp::server<websocketpp::config::asio> server;
-    server s;
     websocketpp::lib::asio::io_context ctx;
+    server s;
     server::io_service_ptr ptr = &ctx;
     s.init_asio(ptr);
     BOOST_CHECK_EQUAL(&s.get_io_service(), &ctx);
