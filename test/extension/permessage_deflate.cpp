@@ -662,6 +662,34 @@ BOOST_AUTO_TEST_CASE( compress_data_large ) {
     BOOST_CHECK_EQUAL( compress_in, decompress_out );
 }
 
+BOOST_AUTO_TEST_CASE( compress_data_several_pieces ) {
+    ext_vars v;
+
+    // Data that does not compress, so that both the input to compress() and
+    // the input to decompress() are longer than the 8192 byte pieces that
+    // they give zlib
+    std::string compress_in(3 * 8192 + 1, '\0');
+    uint32_t x = 1;
+    for (size_t i = 0; i < compress_in.size(); i++) {
+        x = x * 1103515245 + 12345;
+        compress_in[i] = static_cast<char>(x >> 24);
+    }
+    std::string compress_out;
+    std::string decompress_out;
+
+    v.ec = v.exts.init(true);
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+
+    v.ec = v.exts.compress(compress_in,compress_out);
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+    BOOST_CHECK_GT( compress_out.size(), 3 * 8192 );
+    BOOST_CHECK_EQUAL( compress_out.substr(compress_out.size() - 4), std::string("\x00\x00\xff\xff", 4) );
+
+    v.ec = v.exts.decompress(reinterpret_cast<const uint8_t *>(compress_out.data()),compress_out.size(),decompress_out);
+    BOOST_CHECK_EQUAL( v.ec, websocketpp::lib::error_code() );
+    BOOST_CHECK( compress_in == decompress_out );
+}
+
 BOOST_AUTO_TEST_CASE( compress_data_no_context_takeover ) {
     ext_vars v;
 

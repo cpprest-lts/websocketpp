@@ -574,9 +574,6 @@ public:
 
     /// Compress bytes
     /**
-     * @todo: avail_in/out is 32 bit, need to fix for cases of >32 bit frames
-     * on 64 bit machines.
-     *
      * @param [in] in String to compress
      * @param [out] out String to append compressed bytes to
      * @return Error or status code
@@ -594,20 +591,29 @@ public:
             return lib::error_code();
         }
 
-        m_dstate.avail_in = in.size();
+        // zlib's avail_in is 32 bits, so give it the input in pieces, and
+        // flush only after the last piece
+        size_t input_remaining = in.size();
+        m_dstate.avail_in = 0;
         m_dstate.next_in = (unsigned char *)(const_cast<char *>(in.data()));
 
         do {
+            if (m_dstate.avail_in == 0 && input_remaining > 0) {
+                size_t const input = (std::min)(m_compress_buffer_size, input_remaining);
+                m_dstate.avail_in = static_cast<uInt>(input);
+                input_remaining -= input;
+            }
+
             // Output to local buffer
-            m_dstate.avail_out = m_compress_buffer_size;
+            m_dstate.avail_out = static_cast<uInt>(m_compress_buffer_size);
             m_dstate.next_out = m_compress_buffer.get();
 
-            deflate(&m_dstate, m_flush);
+            deflate(&m_dstate, input_remaining == 0 ? m_flush : Z_NO_FLUSH);
 
             output = m_compress_buffer_size - m_dstate.avail_out;
 
             out.append((char *)(m_compress_buffer.get()),output);
-        } while (m_dstate.avail_out == 0);
+        } while (m_dstate.avail_out == 0 || (m_dstate.avail_in == 0 && input_remaining > 0));
 
         return lib::error_code();
     }
@@ -641,10 +647,18 @@ public:
 
         int ret;
 
-        m_istate.avail_in = len;
+        // zlib's avail_in is 32 bits, so give it the input in pieces
+        size_t input_remaining = len;
+        m_istate.avail_in = 0;
         m_istate.next_in = const_cast<unsigned char *>(buf);
 
         do {
+            if (m_istate.avail_in == 0 && input_remaining > 0) {
+                size_t const input = (std::min)(m_compress_buffer_size, input_remaining);
+                m_istate.avail_in = static_cast<uInt>(input);
+                input_remaining -= input;
+            }
+
             size_t const remaining = out.size() < m_max_message_size
                 ? m_max_message_size - out.size()
                 : 0;
@@ -678,7 +692,7 @@ public:
                 reinterpret_cast<char *>(m_decompress_buffer.get()),
                 output
             );
-        } while (m_istate.avail_out == 0);
+        } while (m_istate.avail_out == 0 || (m_istate.avail_in == 0 && input_remaining > 0));
 
         return lib::error_code();
     }
