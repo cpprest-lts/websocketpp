@@ -31,6 +31,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <istream>
+#include <locale>
 #include <sstream>
 #include <string>
 
@@ -120,6 +121,7 @@ inline lib::error_code parser::set_body(std::string const & value) {
     }
 
     std::stringstream len;
+    len.imbue(std::locale::classic());
     len << value.size();
     ec = replace_header("Content-Length", len.str());
     if (ec) { return ec; }

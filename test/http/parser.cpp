@@ -29,6 +29,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <iostream>
+#include <locale>
 #include <string>
 
 #include <websocketpp/http/request.hpp>
@@ -1053,4 +1054,25 @@ BOOST_AUTO_TEST_CASE( write_request_with_body ) {
     BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
 
     BOOST_CHECK_EQUAL( r.raw(), raw );
+}
+
+// Numeric punctuation that groups digits in threes with a comma
+struct grouping_numpunct : std::numpunct<char> {
+    char do_thousands_sep() const { return ','; }
+    std::string do_grouping() const { return "\3"; }
+};
+
+// Content-Length formatting ignores the global C++ locale
+BOOST_AUTO_TEST_CASE( set_body_classic_locale ) {
+    websocketpp::http::parser::request r;
+
+    std::locale old = std::locale::global(
+        std::locale(std::locale::classic(), new grouping_numpunct));
+
+    websocketpp::lib::error_code ec = r.set_body(std::string(1000, 'x'));
+
+    std::locale::global(old);
+
+    BOOST_CHECK_EQUAL(ec, websocketpp::lib::error_code());
+    BOOST_CHECK_EQUAL( r.get_header("Content-Length"), "1000" );
 }
