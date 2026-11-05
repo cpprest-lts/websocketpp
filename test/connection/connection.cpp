@@ -213,6 +213,15 @@ void check_on_fail(server* s, websocketpp::lib::error_code ec, bool & called,
     called = true;
 }
 
+void check_origin_on_fail(server* s, bool & called,
+    websocketpp::connection_hdl hdl)
+{
+    server::connection_ptr con = s->get_con_from_hdl(hdl);
+
+    BOOST_CHECK_EQUAL(con->get_origin(), "");
+    called = true;
+}
+
 void on_open_print(server* s, websocketpp::connection_hdl hdl)
 {
     server::connection_ptr con = s->get_con_from_hdl(hdl);
@@ -351,6 +360,13 @@ BOOST_AUTO_TEST_CASE( set_status_with_msg_invalid_state ) {
     BOOST_CHECK_THROW(con->set_status(websocketpp::http::status_code::ok,"OK"), websocketpp::exception);
 }
 
+BOOST_AUTO_TEST_CASE( get_origin_before_handshake ) {
+    server s;
+    server::connection_ptr con = s.get_connection();
+
+    BOOST_CHECK_EQUAL(con->get_origin(), "");
+}
+
 BOOST_AUTO_TEST_CASE( basic_client_websocket ) {
     std::string uri = "ws://localhost";
 
@@ -429,6 +445,17 @@ BOOST_AUTO_TEST_CASE( websocket_fail_unsupported_version ) {
     websocketpp::lib::error_code ec = make_error_code(websocketpp::error::unsupported_version);
     bool called = false;
     s.set_fail_handler(bind(&check_on_fail,&s,ec,websocketpp::lib::ref(called),::_1));
+
+    run_server_test(s,input,false);
+    BOOST_CHECK(called);
+}
+
+BOOST_AUTO_TEST_CASE( websocket_fail_unsupported_version_get_origin ) {
+    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 12\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
+
+    server s;
+    bool called = false;
+    s.set_fail_handler(bind(&check_origin_on_fail,&s,websocketpp::lib::ref(called),::_1));
 
     run_server_test(s,input,false);
     BOOST_CHECK(called);
