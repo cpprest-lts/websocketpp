@@ -1346,7 +1346,8 @@ public:
     /// Return the same origin policy origin value from the opening request.
     /**
      * This value is available after the HTTP request has been fully read and
-     * may be called from any thread.
+     * may be called from any thread. It is empty before then, and if the
+     * request asked for an unsupported WebSocket version.
      *
      * @return The connection's origin value from the opening handshake.
      */

@@ -64,6 +64,9 @@ void connection<config>::set_termination_handler(
 template <typename config>
 std::string const & connection<config>::get_origin() const {
     //scoped_lock_type lock(m_connection_state_lock);
+    if (!m_processor) {
+        return http::empty_header;
+    }
     return m_processor->get_origin(m_request);
 }
 
