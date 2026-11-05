@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, ubuntu-24.04-arm]
+        os: [ubuntu-24.04, ubuntu-24.04-arm, ubuntu-26.04, ubuntu-26.04-arm]
         build_type: [Debug, Release]
     runs-on: ${{ matrix.os }}
     steps:
@@ -24,8 +24,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build zlib1g-dev \
-            libboost-random-dev libboost-system-dev libboost-test-dev libboost-thread-dev
+          sudo apt-get install -y ninja-build libssl-dev zlib1g-dev \
+            libboost-random-dev libboost-test-dev libboost-thread-dev
 
       - name: Configure
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DBUILD_TESTS=ON
@@ -35,3 +35,65 @@ jobs:
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
+  macos:
+    name: ${{ matrix.os }} ${{ matrix.build_type }}
+    strategy:
+      fail-fast: false
+      # Two jobs rather than the full matrix, because GitHub warns that "Due to capacity constraints,
+      # jobs targeting macOS arm64 runners may experience longer queue times."
+      matrix:
+        include:
+          - os: macos-15
+            build_type: Release
+          - os: macos-26
+            build_type: Debug
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install dependencies
+        run: brew install ninja boost openssl@3
+
+      - name: Configure
+        run: >-
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DBUILD_TESTS=ON
+          -DOPENSSL_ROOT_DIR="$(brew --prefix openssl@3)"
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  windows:
+    name: ${{ matrix.os }} ${{ matrix.build_type }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2025-vs2026, windows-2022]
+        build_type: [Debug, Release]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7
+
+      # The CMake configuration links Boost statically with MSVC, so use a static triplet
+      - name: Install dependencies
+        run: >-
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install --triplet x64-windows-static-md
+          boost-asio boost-test boost-thread openssl zlib
+
+      - name: Configure
+        run: >-
+          cmake -B build -A x64 -DBUILD_TESTS=ON
+          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
+          -DVCPKG_TARGET_TRIPLET=x64-windows-static-md
+
+      - name: Build
+        run: cmake --build build --config ${{ matrix.build_type }}
+
+      - name: Test
+        run: ctest --test-dir build -C ${{ matrix.build_type }} --output-on-failure
