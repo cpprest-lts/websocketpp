@@ -161,6 +161,12 @@ bool validate_set_ua(server* s, websocketpp::connection_hdl hdl) {
     return true;
 }
 
+bool validate_reject_with_msg(server* s, websocketpp::connection_hdl hdl) {
+    server::connection_ptr con = s->get_con_from_hdl(hdl);
+    con->set_status(websocketpp::http::status_code::forbidden,"Not Allowed");
+    return false;
+}
+
 void http_func(server* s, websocketpp::connection_hdl hdl) {
     using namespace websocketpp::http;
 
@@ -325,6 +331,24 @@ BOOST_AUTO_TEST_CASE( request_no_server_header_override ) {
     s.set_validate_handler(bind(&validate_set_ua,&s,::_1));
 
     BOOST_CHECK_EQUAL(run_server_test(s,input), output);
+}
+
+BOOST_AUTO_TEST_CASE( validate_reject_set_status_with_msg ) {
+    std::string input = "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nOrigin: http://www.example.com\r\n\r\n";
+    std::string output = "HTTP/1.1 403 Not Allowed\r\n\r\n";
+
+    server s;
+    s.set_user_agent("");
+    s.set_validate_handler(bind(&validate_reject_with_msg,&s,::_1));
+
+    BOOST_CHECK_EQUAL(run_server_test(s,input), output);
+}
+
+BOOST_AUTO_TEST_CASE( set_status_with_msg_invalid_state ) {
+    server s;
+    server::connection_ptr con = s.get_connection();
+
+    BOOST_CHECK_THROW(con->set_status(websocketpp::http::status_code::ok,"OK"), websocketpp::exception);
 }
 
 BOOST_AUTO_TEST_CASE( basic_client_websocket ) {
