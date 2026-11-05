@@ -1,4 +1,4 @@
-HEAD
+0.8.4 - 2026-11-05
 - MINOR BREAKING BUNDLED LIBRARY CHANGE: The bundled mini-HTTP library has
   been refactored to eliminate its use of exceptions. This does not affect any
   of the core library APIs. If any users are calling into the underlying HTTP
@@ -58,9 +58,9 @@ HEAD
   MSVC 2019. Thank you Fedor Strelkov for the patch. #955
 - Compatibility: Build with Boost 1.87 and later, which removed the
   deprecated Asio API, and with Boost 1.89 and later, which have no
-  `boost_system` component. The CMake build now requires CMake 3.10 and
-  Boost 1.66. The renamed Asio transport names `io_service_ptr`, `work_ptr`
-  and `get_io_service()` remain as deprecated aliases of `io_context_ptr`,
+  `boost_system` component. The CMake build now requires Boost 1.66. The
+  renamed Asio transport names `io_service_ptr`, `work_ptr` and
+  `get_io_service()` remain as deprecated aliases of `io_context_ptr`,
   `work_guard_ptr` and `get_io_context()`. The new CMake option
   `USE_ASIO_STANDALONE` builds the tests and examples with standalone Asio.
   Thank you Amini Allight, Nicolas PARLANT and Gianfranco Costamagna for the
@@ -133,6 +133,11 @@ HEAD
 - CMake: A second `find_package(websocketpp)` no longer fails because the
   `websocketpp::websocketpp` target already exists. Thank you Joo200 for
   the patch. #966 #1097
+- CMake: The installed package version file accepts this version for a
+  request for any earlier 0.8.x version, such as
+  `find_package(websocketpp 0.8.2)`, and no longer checks whether the
+  consumer is 32-bit or 64-bit. The CMake build now requires CMake 3.14.
+  Thank you Wolfgang Stöggl for the patch this is based on. #888
 
 0.8.2 - 2020-04-19
 - Examples: Update print_client_tls example to remove use of deprecated
