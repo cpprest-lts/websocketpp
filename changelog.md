@@ -79,6 +79,11 @@ HEAD
 - Bug: permessage-deflate gives zlib its input in pieces, so that messages
   of 4 GiB or more are no longer truncated on 64-bit platforms.
   cpprest-lts/websocketpp#12
+- Bug: `connection::get_origin()` no longer crashes before the handshake
+  request has been read, or when the request asks for an unsupported
+  WebSocket version. It returns an empty string instead. #561
+- Bug: Fix a data race on the byte order that `_htonll` cached in a
+  `static`. #1027
 - Security: Resolve an issue where the permessage deflate extension could
   expand beyond the configured per-message limit. The permessage-deflate config
   now has a configurable limit. (both compile time via custom config and 
