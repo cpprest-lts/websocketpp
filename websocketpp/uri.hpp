@@ -34,6 +34,7 @@
 #include <websocketpp/common/stdint.hpp>
 
 #include <algorithm>
+#include <locale>
 #include <sstream>
 #include <string>
 
@@ -670,6 +671,7 @@ public:
             return m_host;
         } else {
             std::stringstream p;
+            p.imbue(std::locale::classic());
             if (m_ipv6_literal) {
                 p << "[" << m_host << "]:" << m_port;
             } else {
@@ -682,6 +684,7 @@ public:
 
     std::string get_authority() const {
         std::stringstream p;
+        p.imbue(std::locale::classic());
         if (m_ipv6_literal) {
             p << "[" << m_host << "]:" << m_port;
         } else {
@@ -696,6 +699,7 @@ public:
 
     std::string get_port_str() const {
         std::stringstream p;
+        p.imbue(std::locale::classic());
         p << m_port;
         return p.str();
     }
@@ -706,6 +710,7 @@ public:
 
     std::string str() const {
         std::stringstream s;
+        s.imbue(std::locale::classic());
 
         s << m_scheme << "://";
         if (m_ipv6_literal) {

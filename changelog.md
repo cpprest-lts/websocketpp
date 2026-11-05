@@ -97,6 +97,10 @@ HEAD
   WebSocket version. It returns an empty string instead. #561
 - Bug: Fix a data race on the byte order that `_htonll` cached in a
   `static`. #1027
+- Bug: Format the port in URIs and the `Host` header, and the
+  `Content-Length` header, with the classic C++ locale. A global locale that
+  groups digits produced values such as `9,999`. Thank you xiaoxin-mz for
+  reporting. #1131
 - Security: Resolve an issue where the permessage deflate extension could
   expand beyond the configured per-message limit. The permessage-deflate config
   now has a configurable limit. (both compile time via custom config and 

@@ -29,6 +29,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <iostream>
+#include <locale>
 #include <string>
 
 #include <websocketpp/uri.hpp>
@@ -393,6 +394,31 @@ BOOST_AUTO_TEST_CASE( uri_invalid_no_scheme ) {
     websocketpp::uri uri("myserver.com");
 
     BOOST_CHECK( !uri.get_valid() );
+}
+
+// Numeric punctuation that groups digits in threes with a comma
+struct grouping_numpunct : std::numpunct<char> {
+    char do_thousands_sep() const { return ','; }
+    std::string do_grouping() const { return "\3"; }
+};
+
+// Port formatting ignores the global C++ locale
+BOOST_AUTO_TEST_CASE( uri_port_classic_locale ) {
+    std::locale old = std::locale::global(
+        std::locale(std::locale::classic(), new grouping_numpunct));
+
+    websocketpp::uri uri("ws://localhost:9999/chat");
+    std::string host_port = uri.get_host_port();
+    std::string authority = uri.get_authority();
+    std::string port_str = uri.get_port_str();
+    std::string str = uri.str();
+
+    std::locale::global(old);
+
+    BOOST_CHECK_EQUAL( host_port, "localhost:9999" );
+    BOOST_CHECK_EQUAL( authority, "localhost:9999" );
+    BOOST_CHECK_EQUAL( port_str, "9999" );
+    BOOST_CHECK_EQUAL( str, "ws://localhost:9999/chat" );
 }
 
 // TODO: tests for the other constructors, especially with IP literals
