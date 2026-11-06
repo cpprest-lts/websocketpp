@@ -58,19 +58,23 @@
   MSVC 2019. Thank you Fedor Strelkov for the patch. #955
 - Compatibility: Build with Boost 1.87 and later, which removed the
   deprecated Asio API, and with Boost 1.89 and later, which have no
-  `boost_system` component. The CMake build now requires Boost 1.66. The
-  renamed Asio transport names `io_service_ptr`, `work_ptr` and
-  `get_io_service()` remain as deprecated aliases of `io_context_ptr`,
-  `work_guard_ptr` and `get_io_context()`. The new CMake option
-  `USE_ASIO_STANDALONE` builds the tests and examples with standalone Asio.
-  Thank you Amini Allight, Nicolas PARLANT and Gianfranco Costamagna for the
-  patches. #1190 cpprest-lts/websocketpp#2
+  `boost_system` component. The Asio transport now needs Boost 1.66 or
+  later, or standalone Asio 1.12 or later. C++03 builds need Boost 1.83 or
+  earlier, because Boost.System 1.84 removed C++03 support. Building the
+  tests and examples with CMake needs Boost 1.70 or later. The renamed Asio
+  transport names `io_service_ptr`, `work_ptr` and `get_io_service()`
+  remain as deprecated aliases of `io_context_ptr`, `work_guard_ptr` and
+  `get_io_context()`. The new CMake option `USE_ASIO_STANDALONE` builds the
+  tests and examples with standalone Asio. Thank you Amini Allight, Nicolas
+  PARLANT and Gianfranco Costamagna for the patches. #1190
+  cpprest-lts/websocketpp#2
 - Compatibility: Remove the simple template ids from the constructors in
   `logger/syslog.hpp` as well, so that it compiles in C++20 mode. Thank you
   Seth Bashford for the patch. #1066
 - Compatibility: Don't use `std::aligned_storage`, which C++23 deprecates,
-  in the Asio transport. Thank you Felix Hommel for the patch this is based
-  on. #1107 #1184
+  in the Asio transport. With GCC, the Asio transport in C++11 builds now
+  needs GCC 4.9 or later, for `std::max_align_t`. Thank you Felix Hommel
+  for the patch this is based on. #1107 #1184
 - Compatibility: The deleted endpoint copy constructor takes a `const`
   reference, so that an endpoint can be put in a `std::variant` with
   libc++. Thank you Ricardo Domingues for the patch. #1020
