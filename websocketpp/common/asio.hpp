@@ -45,8 +45,8 @@
 #ifdef ASIO_STANDALONE
     #include <asio/version.hpp>
     
-    #if (ASIO_VERSION/100000) == 1 && ((ASIO_VERSION/100)%1000) < 8
-        static_assert(false, "The minimum version of standalone Asio is 1.8.0");
+    #if (ASIO_VERSION/100000) == 1 && ((ASIO_VERSION/100)%1000) < 12
+        static_assert(false, "The minimum version of standalone Asio is 1.12.0");
     #endif
     
     #include <asio.hpp>
