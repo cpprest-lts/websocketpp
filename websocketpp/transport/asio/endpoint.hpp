@@ -91,7 +91,7 @@ public:
     /// Type of timer handle
     typedef lib::shared_ptr<lib::asio::steady_timer> timer_ptr;
     /// Type of a shared pointer to an io_context work object
-    typedef lib::shared_ptr<lib::asio::executor_work_guard<lib::asio::io_context::executor_type>> work_guard_ptr;
+    typedef lib::shared_ptr<lib::asio::executor_work_guard<lib::asio::io_context::executor_type> > work_guard_ptr;
     /// Type of a shared pointer to an io_context work object (deprecated)
     /**
      * @deprecated Use work_guard_ptr instead
